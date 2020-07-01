@@ -2,7 +2,7 @@
 ## 畸变产生的原因
 
 相机的成像过程实质上是坐标系的转换。首先空间中的点由 “世界坐标系” 转换到 “像机坐标系”，然后再将其投影到成像平面(图像物理坐标系)，最后再将成像平面上的数据转换到 图像像素坐标系。但是由于透镜制造精度以及组装工艺的偏差会引入畸变，导致原始图像的失真。
-
+![Image]https://github.com/barryyan0121/Camera_Calibration/blob/master/pic/pictures/20150414084703092.jpg
 ```bash
 pip install foobar
 ```

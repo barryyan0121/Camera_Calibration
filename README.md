@@ -39,14 +39,28 @@ y = y.*(1+k1*r2 + k2*r2.^2) + 2*p2.*x.*y + p1*(r2 + 2*y.^2);
 标定图片需要使用标定板在不同位置、不同角度、不同姿态下拍摄，最少需要3张，以10~20张为宜。标定板需要是黑白相间的矩形构成的棋盘图，制作精度要求较高，如下图所示：
 ![Image of pic](https://github.com/barryyan0121/Camera_Calibration/blob/master/pic/IR_camera_calib_img/00.png)
 
+```python
+images = glob.glob('/home/barry/Desktop/Camera_Calibration/pic/IR_camera_calib_img/*.png')
+```
+
 ### 2.对每一张标定图片，提取角点信息
 需要使用cv2.findChessboardCorners函数提取角点，这里的角点专指的是标定板上的内角点，这些角点与标定板的边缘不接触。
 
 第一个参数Image，传入拍摄的棋盘图Mat图像，必须是8位的灰度或者彩色图像；
 
+```python
+img = cv2.imread(fname)
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+```
+
 第二个参数patternSize，每个棋盘图上内角点的行列数，一般情况下，行列数不要相同，便于后续标定程序识别标定板的方向，这里是(8,5)。
 
 第三个参数flags：用于定义棋盘图上内角点查找的不同处理方式，有默认值(None)。
+
+```python
+# Find the chessboard corners
+ret, corners = cv2.findChessboardCorners(gray, (8,5), None)
+```
 
 ### 3. 对每一张标定图片，进一步提取亚像素角点信息
 为了提高标定精度，需要在初步提取的角点信息上进一步提取亚像素信息，降低相机标定偏差，常用的方法是cv2.cornerSubPix，另一个方法是使用cv2.find4QuadCornerSubpix函数，这个方法是专门用来获取棋盘图上内角点的精确位置的，这里使用的是cornerSubPix函数。
@@ -61,65 +75,123 @@ cornerSubPix函数原型：
 
 第四个参数zeroZone，死区的一半尺寸，死区为不对搜索区的中央位置做求和运算的区域。它是用来避免自相关矩阵出现某些可能的奇异性。当值为(-1,-1)时表示没有死区，这里选择用(-1,-1)。
 
-第五个参数criteria，定义求角点的迭代过程的终止条件，可以为迭代次数和角点精度两者的组合
+第五个参数criteria，定义求角点的迭代过程的终止条件，可以为迭代次数和角点精度两者的组合。
+
+```python
+subpix_criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.01)
+# Refining corners position with sub-pixels based algorithm
+cv2.cornerSubPix(gray, corners, (3, 3), (-1, -1), subpix_criteria)
+objpoints.append(objp)
+imgpoints.append(corners)
+```
 
 ### 4. 在棋盘标定图上绘制找到的内角点(非必须，仅为了显示)
-drawChessboardCorners函数用于绘制被成功标定的角点，函数原型
+cv2.drawChessboardCorners函数用于绘制被成功标定的角点，函数原型：
 
-第一个参数image，8位灰度或者彩色图像；
-第二个参数patternSize，每张标定棋盘上内角点的行列数；
+第一个参数image，8位灰度或者彩色图像。
 
-第三个参数corners，初始的角点坐标向量，同时作为亚像素坐标位置的输出，所以需要是浮点型数据，一般用元素是Pointf2f/Point2d的向量来表示：vector<Point2f/Point2d> iamgePointsBuf；
+第二个参数patternSize，每张标定棋盘上内角点的行列数，这里是(8,5)。
 
-第四个参数patternWasFound，标志位，用来指示定义的棋盘内角点是否被完整的探测到，true表示别完整的探测到，函数会用直线依次连接所有的内角点，作为一个整体，false表示有未被探测到的内角点，这时候函数会以(红色)圆圈标记处检测到的内角点；
+第三个参数corners，初始的角点坐标向量，同时作为亚像素坐标位置的输出，所以需要是浮点型数据。
+
+第四个参数ret，标志位，用来指示定义的棋盘内角点是否被完整的探测到，true表示别完整的探测到，函数会用直线依次连接所有的内角点，作为一个整体，false表示有未被探测到的内角点，这时候函数会以(红色)圆圈标记处检测到的内角点。
+
+```python
+# Draw and display the corners
+cv2.drawChessboardCorners(img, (8,5), corners, ret)
+cv2.imshow('img', img)
+cv2.waitKey(500)
+```
 
 ### 5. 相机标定
-获取到棋盘标定图的内角点图像坐标之后，就可以使用calibrateCamera函数进行标定，计算相机内参和外参系数，
+获取到棋盘标定图的内角点图像坐标之后，就可以使用cv2.calibrateCamera函数进行标定，计算相机内参和外参系数，
 
 calibrateCamera函数原型：
 
-第一个参数objectPoints，为世界坐标系中的三维点。在使用时，应该输入一个三维坐标点的向量的向量，即vector<vector<Point3f>> object_points。需要依据棋盘上单个黑白矩阵的大小，计算出（初始化）每一个内角点的世界坐标。
+第一个参数objectPoints，为世界坐标系中的三维点。在使用时，应该输入一个三维坐标点的向量的向量。需要依据棋盘上单个黑白矩阵的大小，计算出（初始化）每一个内角点的世界坐标。
 
-第二个参数imagePoints，为每一个内角点对应的图像坐标点。和objectPoints一样，应该输入vector<vector<Point2f>> image_points_seq形式的变量；
+第二个参数imagePoints，为每一个内角点对应的图像坐标点。和objectPoints一样，应该输入一个三维坐标点的向量的向量。
 
 第三个参数imageSize，为图像的像素尺寸大小，在计算相机的内参和畸变矩阵时需要使用到该参数；
 
-第四个参数cameraMatrix为相机的内参矩阵。输入一个Mat cameraMatrix即可，如Mat cameraMatrix=Mat(3,3,CV_32FC1,Scalar::all(0));
+第四个参数cameraMatrix为相机的内参矩阵。
 
-第五个参数distCoeffs为畸变矩阵。输入一个Mat distCoeffs=Mat(1,5,CV_32FC1,Scalar::all(0))即可；
+第五个参数distCoeffs为畸变矩阵。
 
-第六个参数rvecs为旋转向量；应该输入一个Mat类型的vector，即vector<Mat>rvecs;
+第六个参数rvecs为旋转向量；应该输入一个Mat类型的向量。
 
-第七个参数tvecs为位移向量，和rvecs一样，应该为vector<Mat> tvecs；
+第七个参数tvecs为位移向量，和rvecs一样，应该为Mat类型的向量。
 
+第八个参数flags：用于定义棋盘图上内角点查找的不同处理方式，有默认值(None)。
+
+第九个参数criteria，定义求角点的迭代过程的终止条件，可以为迭代次数和角点精度两者的组合，默认值为(None)。
+
+```python
+# Test undistortion on an image
+img = cv2.imread('/home/barry/Desktop/Camera_Calibration/pic/img/calib.png')
+img_size = (img.shape[1], img.shape[0])
+
+# Do camera calibration given object points and image points
+ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, img_size,None,None)
+```
 ### 6. 对标定结果进行评价
 对标定结果进行评价的方法是通过得到的摄像机内外参数，对空间的三维点进行重新投影计算，得到空间三维点在图像上新的投影点的坐标，计算投影坐标和亚像素角点坐标之间的偏差，偏差越小，标定结果越好。
 
-对空间三维坐标点进行反向投影的函数是projectPoints，函数原型是：
+对空间三维坐标点进行反向投影的函数是cv2.projectPoints，函数原型：
+
+第一个参数objectPoints，为世界坐标系中的三维点。在使用时，应该输入一个三维坐标点的向量的向量。需要依据棋盘上单个黑白矩阵的大小，计算出（初始化）每一个内角点的世界坐标。
+
+第二个参数rvecs为旋转向量；应该输入一个Mat类型的向量。
+
+第三个参数tvecs为位移向量，和rvecs一样，应该为Mat类型的向量。
+
+第四个参数cameraMatrix为相机的内参矩阵。
+
+第五个参数distCoeffs为畸变矩阵。
+
+```python
+print (("ret:"),ret)
+print (("internal matrix:\n"),mtx)
+# in the form of (k_1,k_2,p_1,p_2,k_3)
+print (("distortion cofficients:\n"),dist)
+print (("rotation vectors:\n"),rvecs)
+print (("translation vectors:\n"),tvecs)
+
+# calculate the error of reproject
+total_error = 0
+for i in range(len(objpoints)):
+    img_points_repro, _ = cv2.projectPoints(objpoints[i], rvecs[i], tvecs[i], mtx, dist)
+    error = cv2.norm(imgpoints[i], img_points_repro, cv2.NORM_L2)/len(img_points_repro)
+    total_error += error
+print(("Average Error of Reproject: "), total_error/len(objpoints))
+```
 
 ### 7. 查看标定效果——利用标定结果对棋盘图进行矫正
-利用求得的相机的内参和外参数据，可以对图像进行畸变的矫正，这里有两种方法可以达到矫正的目的，分别说明一下。
+利用求得的相机的内参和外参数据，可以对图像进行畸变的矫正，这里有两种方法可以达到矫正的目的，分别说明一下。<br>
+方法一相比方法二执行效率更高一些，推荐使用。
 
 方法一：使用initUndistortRectifyMap和remap两个函数配合实现。
 
 initUndistortRectifyMap用来计算畸变映射，remap把求得的映射应用到图像上。
 
-方法二：使用undistort函数实现
+方法二：使用undistort函数实现，这里采用此方法。
 
 undistort函数原型：
 
-第一个参数src，输入参数，代表畸变的原始图像；
+第一个参数src，输入参数，代表畸变的原始图像。
 
-第二个参数dst，矫正后的输出图像，跟输入图像具有相同的类型和大小；
+第二个参数cameraMatrix为之前求得的相机的内参矩阵。
 
-第三个参数cameraMatrix为之前求得的相机的内参矩阵；
+第三个参数distCoeffs为之前求得的相机畸变矩阵。
 
-第四个参数distCoeffs为之前求得的相机畸变矩阵；
+第四个参数dst，矫正后的输出图像，跟输入图像具有相同的类型和大小。
 
-第五个参数newCameraMatrix，默认跟cameraMatrix保持一致；
+第五个参数newCameraMatrix，默认跟cameraMatrix保持一致。
 
-方法一相比方法二执行效率更高一些，推荐使用。
-
+```python
+dst = cv2.undistort(img, mtx, dist, None, mtx)
+cv2.imwrite('/home/barry/Desktop/Camera_Calibration/pic/save_dedistortion/calibrated_img.png',dst)
+```
 完整代码如下：
 
 ```python
@@ -136,6 +208,7 @@ objp[:,:2] = np.mgrid[0:8, 0:5].T.reshape(-1,2)
 # Arrays to store object points and image points from all the images.
 objpoints = [] # 3d points in real world space
 imgpoints = [] # 2d points in image plane.
+subpix_criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.01)
 
 # Make a list of calibration images
 images = glob.glob('/home/barry/Desktop/Camera_Calibration/pic/IR_camera_calib_img/*.png')
@@ -150,6 +223,8 @@ for idx, fname in enumerate(images):
 
     # If found, add object points, image points
     if ret == True:
+        # Refining corners position with sub-pixels based algorithm
+        cv2.cornerSubPix(gray, corners, (3, 3), (-1, -1), subpix_criteria)
         objpoints.append(objp)
         imgpoints.append(corners)
 
@@ -161,9 +236,6 @@ for idx, fname in enumerate(images):
 
 cv2.destroyAllWindows()
 
-import pickle
-
-
 # Test undistortion on an image
 img = cv2.imread('/home/barry/Desktop/Camera_Calibration/pic/img/calib.png')
 img_size = (img.shape[1], img.shape[0])
@@ -171,6 +243,20 @@ img_size = (img.shape[1], img.shape[0])
 # Do camera calibration given object points and image points
 ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, img_size,None,None)
 
+print (("ret:"),ret)
+print (("internal matrix:\n"),mtx)
+# in the form of (k_1,k_2,p_1,p_2,k_3)
+print (("distortion cofficients:\n"),dist)
+print (("rotation vectors:\n"),rvecs)
+print (("translation vectors:\n"),tvecs)
+
+# calculate the error of reproject
+total_error = 0
+for i in range(len(objpoints)):
+    img_points_repro, _ = cv2.projectPoints(objpoints[i], rvecs[i], tvecs[i], mtx, dist)
+    error = cv2.norm(imgpoints[i], img_points_repro, cv2.NORM_L2)/len(img_points_repro)
+    total_error += error
+print(("Average Error of Reproject: "), total_error/len(objpoints))
 
 dst = cv2.undistort(img, mtx, dist, None, mtx)
 cv2.imwrite('/home/barry/Desktop/Camera_Calibration/pic/save_dedistortion/calibrated_img.png',dst)
@@ -187,6 +273,8 @@ ax1.set_title('Original Image', fontsize=30)
 ax2.imshow(dst)
 ax2.set_title('Undistorted Image', fontsize=30)
 ```
+## 测试结果
+### 原始图像
 
 ## Acknowledgement
 This project refers to the following blogs:<br>

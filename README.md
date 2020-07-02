@@ -37,7 +37,7 @@ y = y.*(1+k1*r2 + k2*r2.^2) + 2*p2.*x.*y + p1*(r2 + 2*y.^2);
 
 ### 1. 准备标定图片
 标定图片需要使用标定板在不同位置、不同角度、不同姿态下拍摄，最少需要3张，以10~20张为宜。标定板需要是黑白相间的矩形构成的棋盘图，制作精度要求较高，如下图所示：
-![Image of pic](https://github.com/barryyan0121/Camera_Calibration/blob/master/pic/IR_camera_calib_img/00.png）
+![Image of pic](https://github.com/barryyan0121/Camera_Calibration/blob/master/pic/IR_camera_calib_img/00.png)
 
 ### 2.对每一张标定图片，提取角点信息
 需要使用findChessboardCorners函数提取角点，这里的角点专指的是标定板上的内角点，这些角点与标定板的边缘不接触。

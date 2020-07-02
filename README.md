@@ -275,6 +275,25 @@ ax2.set_title('Undistorted Image', fontsize=30)
 ```
 ## 测试结果
 ### 原始图像
+![Image of pic](https://github.com/barryyan0121/Camera_Calibration/blob/master/pic/img/calib.png)
+### 校正图像
+![Image of pic](https://github.com/barryyan0121/Camera_Calibration/blob/master/pic/save_dedistortion/calibrated_img.png)
+### 畸变参数
+```
+distortion cofficients:
+[[-0.30530856  0.18968922 -0.00066216  0.00120542 -0.14041762]]
+```
+### 相机内参矩阵
+```
+internal matrix:
+[[1.83340468e+03 0.00000000e+00 9.74610436e+02]
+[0.00000000e+00 1.83579252e+03 6.43513391e+02]
+[0.00000000e+00 0.00000000e+00 1.00000000e+00]]
+```
+### 误差
+```
+Average Error of Reproject:  0.05625523071599363
+```
 
 ## Acknowledgement
 This project refers to the following blogs:<br>

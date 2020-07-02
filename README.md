@@ -36,8 +36,8 @@ foobar.singularize('phenomena') # returns 'phenomenon'
 
 ## 畸变校正的方法
 
-我们已知的是畸变后的图像，要得到没有畸变的图像就要通过畸变模型推导其映射关系。 真实图像 imgR 与 畸变图像 imgD 之间的关系为: imgR(U, V) = imgD(Ud, Vd)。通过这个关系，找出所有的 imgR(U, V) 。(U, V)映射到(Ud, Vd)中的 (Ud, Vd) 往往不是整数(U和V是整数，因为它是我们要组成图像的像素坐标位置，以这正常图像的坐标位置去求在畸变图像中的坐标位置，取出对应的像素值，这也是正常图像的像素值)。推导公式为：
-![Image of pic](https://github.com/barryyan0121/Camera_Calibration/blob/master/pic/pictures/20150414084827516.jpg)
+我们已知的是畸变后的图像，要得到没有畸变的图像就要通过畸变模型推导其映射关系。 真实图像 imgR 与 畸变图像 imgD 之间的关系为: imgR(U, V) = imgD(Ud, Vd)。通过这个关系，找出所有的 imgR(U, V) 。(U, V)映射到(Ud, Vd)中的 (Ud, Vd) 往往不是整数(U和V是整数，因为它是我们要组成图像的像素坐标位置，以这正常图像的坐标位置去求在畸变图像中的坐标位置，取出对应的像素值，这也是正常图像的像素值)。<br>推导公式为：
+![Image of pic](https://github.com/barryyan0121/Camera_Calibration/blob/master/pic/pictures/20150414084827516.jpg)<br>
 其逆运算为：
 ![Image of pic](https://github.com/barryyan0121/Camera_Calibration/blob/master/pic/pictures/20150414084840745.jpg)
 

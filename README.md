@@ -102,6 +102,7 @@ cv2.drawChessboardCorners(img, (8,5), corners, ret)
 cv2.imshow('img', img)
 cv2.waitKey(500)
 ```
+![Image of pic](https://github.com/barryyan0121/Camera_Calibration/blob/master/pic/pictures/img_screenshot_01.07.2020.png)
 
 ### 5. 相机标定
 获取到棋盘标定图的内角点图像坐标之后，就可以使用cv2.calibrateCamera函数进行标定，计算相机内参和外参系数，

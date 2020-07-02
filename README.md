@@ -37,7 +37,7 @@ y = y.*(1+k1*r2 + k2*r2.^2) + 2*p2.*x.*y + p1*(r2 + 2*y.^2);
 
 ### 1. 准备标定图片
 标定图片需要使用标定板在不同位置、不同角度、不同姿态下拍摄，最少需要3张，以10~20张为宜。标定板需要是黑白相间的矩形构成的棋盘图，制作精度要求较高，如下图所示：
-![Image of pic]()
+![Image of pic](https://github.com/barryyan0121/Camera_Calibration/blob/master/pic/pictures/20200701232505.png)
 
 ```python
 images = glob.glob('/home/barry/Desktop/Camera_Calibration/pic/IR_camera_calib_img/*.png')
@@ -102,7 +102,7 @@ cv2.drawChessboardCorners(img, (8,5), corners, ret)
 cv2.imshow('img', img)
 cv2.waitKey(500)
 ```
-![Image of pic]()
+![Image of pic](https://github.com/barryyan0121/Camera_Calibration/blob/master/pic/pictures/20200701232511.jpg)
 
 ### 5. 相机标定
 获取到棋盘标定图的内角点图像坐标之后，就可以使用cv2.calibrateCamera函数进行标定，计算相机内参和外参系数，

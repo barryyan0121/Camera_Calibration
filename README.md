@@ -26,25 +26,18 @@ x = x.*(1+k1*r2 + k2*r2.^2) + 2*p1.*x.*y + p2*(r2 + 2*x.^2);
 y = y.*(1+k1*r2 + k2*r2.^2) + 2*p2.*x.*y + p1*(r2 + 2*y.^2);
 ```
 
-```python
-import foobar
-
-foobar.pluralize('word') # returns 'words'
-foobar.pluralize('goose') # returns 'geese'
-foobar.singularize('phenomena') # returns 'phenomenon'
-```
-
 ## 畸变校正的方法
 
-我们已知的是畸变后的图像，要得到没有畸变的图像就要通过畸变模型推导其映射关系。 真实图像 imgR 与 畸变图像 imgD 之间的关系为: imgR(U, V) = imgD(Ud, Vd)。通过这个关系，找出所有的 imgR(U, V) 。(U, V)映射到(Ud, Vd)中的 (Ud, Vd) 往往不是整数(U和V是整数，因为它是我们要组成图像的像素坐标位置，以这正常图像的坐标位置去求在畸变图像中的坐标位置，取出对应的像素值，这也是正常图像的像素值)。<br>推导公式为：
+我们已知的是畸变后的图像，要得到没有畸变的图像就要通过畸变模型推导其映射关系。 真实图像 imgR 与 畸变图像 imgD 之间的关系为: imgR(U, V) = imgD(Ud, Vd)。通过这个关系，找出所有的 imgR(U, V) 。(U, V)映射到(Ud, Vd)中的 (Ud, Vd) 往往不是整数(U和V是整数，因为它是我们要组成图像的像素坐标位置，以这正常图像的坐标位置去求在畸变图像中的坐标位置，取出对应的像素值，这也是正常图像的像素值)。<br>推导公式为：<br>
 ![Image of pic](https://github.com/barryyan0121/Camera_Calibration/blob/master/pic/pictures/20150414084827516.jpg)<br>
-其逆运算为：
+其逆运算为：<br>
 ![Image of pic](https://github.com/barryyan0121/Camera_Calibration/blob/master/pic/pictures/20150414084840745.jpg)
 
 ## 代码实现
 
 ### 1. 准备标定图片
 标定图片需要使用标定板在不同位置、不同角度、不同姿态下拍摄，最少需要3张，以10~20张为宜。标定板需要是黑白相间的矩形构成的棋盘图，制作精度要求较高，如下图所示：
+![Image of pic](https://github.com/barryyan0121/Camera_Calibration/blob/master/pic/IR_camera_calib_img/00.png）
 
 ### 2.对每一张标定图片，提取角点信息
 需要使用findChessboardCorners函数提取角点，这里的角点专指的是标定板上的内角点，这些角点与标定板的边缘不接触。
